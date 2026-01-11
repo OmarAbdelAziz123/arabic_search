@@ -1,2 +1,2 @@
-## 0.1.1
-- Add professional example demonstrating Arabic search and filtering
+## 0.1.2
+- Move example to standard /example directory so it appears on pub.dev
