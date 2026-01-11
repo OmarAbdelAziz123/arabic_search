@@ -1,5 +1,9 @@
 import 'options.dart';
 
+/// Arabic text normalization and search utilities.
+///
+/// Use [searchKey] for indexing and search,
+/// and [normalize] for display-safe normalization.
 abstract final class ArabicText {
   static final RegExp _diacritics = RegExp(
     r'[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E8\u06EA-\u06ED]',

@@ -1,5 +1,5 @@
 name: arabic_search
-description: Arabic-first text normalization, digit conversion, and search-key utilities for fast & accurate Arabic search/filtering.
+description: Arabic-first text normalization and search utilities for Dart & Flutter.
 version: 0.1.0
 homepage: https://github.com/OmarAbdelAziz123/arabic_search
 
