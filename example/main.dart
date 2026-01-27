@@ -6,40 +6,115 @@ import 'package:arabic_search/arabic_search.dart';
 /// This example covers:
 /// - Normalizing Arabic text
 /// - Generating search keys
-/// - Performing in-memory filtering
+/// - Simple contains-based search
+/// - Token-based search (all tokens / any token)
+/// - Ranked search over a list of objects using `searchInList`
+/// - Convenience extensions on String & Iterable
+
+// ---------------------------------------------------------------------------
+// Product model (must be declared OUTSIDE main())
+// ---------------------------------------------------------------------------
+class Product {
+  final String name;
+  final String category;
+
+  Product(this.name, this.category);
+
+  @override
+  String toString() => '$name ($category)';
+}
+
 void main() {
-  // Sample data (e.g. products, companies, or posts)
+  // ---------------------------------------------------------------------------
+  // 1) Basic usage with plain strings
+  // ---------------------------------------------------------------------------
+
   final List<String> items = [
     'شركة الإتصالات المصرية',
-    'هاتف آيفون',
+    'هاتف آيفون ١٥ برو',
     'ساعة ذكية',
     'إسلام محمد',
-    'مدرسة المستقبل',
+    'مدرسة المستقبل الدولية',
   ];
 
-  // User search input (can vary in spelling, digits, or diacritics)
   final String query = 'الاتصالات';
 
-  // Perform Arabic-aware filtering
-  final results = items.where(
+  final containsResults = items.where(
     (item) => ArabicText.containsNormalized(item, query),
   );
 
+  print('=== Simple normalized contains ===');
   print('Search query: $query');
   print('Matched results:');
-
-  for (final item in results) {
+  for (final item in containsResults) {
     print('- $item');
   }
 
-  // --- Additional examples ---
-
-  // Generate a normalized search key
+  // Generate normalized search key
   final searchKey = ArabicText.searchKey('إِسْلَام ١٢٣');
-  print('\nSearch key example: $searchKey'); // اسلام 123
+  print('\n=== Search key example ===');
+  print('Original:  "إِسْلَام ١٢٣"');
+  print('SearchKey: "$searchKey"');
 
   // Digits conversion
-  print('\nDigits conversion:');
-  print(ArabicText.toEnglishDigits('٢٠٢٦')); // 2026
-  print(ArabicText.toArabicDigits('2026')); // ٢٠٢٦
+  print('\n=== Digits conversion ===');
+  print('toEnglishDigits("٢٠٢٦") -> ${ArabicText.toEnglishDigits('٢٠٢٦')}');
+  print('toArabicDigits("2026")  -> ${ArabicText.toArabicDigits('2026')}');
+
+  // ---------------------------------------------------------------------------
+  // 2) Token-based search
+  // ---------------------------------------------------------------------------
+  final text = 'شركة الاتصالات المصرية للاتصالات والانترنت';
+  final tokenQueryAll = 'الاتصالات المصرية';
+  final tokenQueryAny = 'المصرية الانترنت';
+
+  print('\n=== Token-based search ===');
+  print('ALL tokens match: ${ArabicText.containsAllTokens(text, tokenQueryAll)}');
+  print('ANY token match:  ${ArabicText.containsAnyToken(text, tokenQueryAny)}');
+
+  // ---------------------------------------------------------------------------
+  // 3) Ranked search over list of Products
+  // ---------------------------------------------------------------------------
+
+  final products = <Product>[
+    Product('موبايل سامسونج جالاكسي', 'هواتف'),
+    Product('هاتف آيفون ١٥ برو ماكس', 'هواتف'),
+    Product('جراب موبايل سامسونج', 'اكسسوارات'),
+    Product('سماعة بلوتوث', 'اكسسوارات'),
+    Product('شاحن سريع للهواتف', 'اكسسوارات'),
+  ];
+
+  final productQuery = 'ايفون 15';
+
+  final rankedResults = ArabicText.searchInList<Product>(
+    products,
+    query: productQuery,
+    textSelector: (p) => p.name,
+  );
+
+  print('\n=== Ranked search in product list ===');
+  for (final hit in rankedResults) {
+    print('- ${hit.item} (score: ${hit.score.toStringAsFixed(2)})');
+  }
+
+  // ---------------------------------------------------------------------------
+  // 4) Using extensions
+  // ---------------------------------------------------------------------------
+
+  final extQuery = 'مدرسة المستقبل';
+  final extResults = items.arabicSearch(
+    extQuery,
+    textSelector: (s) => s,
+  );
+
+  print('\n=== Using Iterable extension `.arabicSearch` ===');
+  for (final hit in extResults) {
+    print('- ${hit.item} (score: ${hit.score.toStringAsFixed(2)})');
+  }
+
+  final raw = '   مُحَمَّد   أحمَد، القاهرة   ';
+  print('\n=== String extensions ===');
+  print('raw:            "$raw"');
+  print('arabicSearchKey: "${raw.arabicSearchKey}"');
+  print('arabicTokens:    ${raw.arabicTokens}');
 }
