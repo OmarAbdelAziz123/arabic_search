@@ -1,11 +1,20 @@
 # arabic_search 🇪🇬🇸🇦
 [![pub package](https://img.shields.io/pub/v/arabic_search.svg)](https://pub.dev/packages/arabic_search)
 
-Arabic-first text normalization and search utilities for Dart & Flutter.  
-Designed to fix common Arabic search issues like different Alef forms (أ/إ/آ),
-diacritics (tashkeel), tatweel (ـ), Arabic digits (٠١٢), and more.
+Arabic-first text normalization and search utilities for **Dart & Flutter**.  
+Built to solve real-world Arabic search problems in a clean, fast, and reusable way.
 
-> If your app supports Arabic search, filtering, or sorting — this package is for you.
+> If your app supports Arabic search, filtering, or sorting — **this package is for you**.
+
+---
+
+## 🎥 Live Demo
+
+Real-time Arabic search demo using `arabic_search` in a Flutter app:
+
+![arabic_search Demo](https://raw.githubusercontent.com/omarabdelaziz/arabic_search/main/assets/demo.gif)
+
+> The demo shows how different Arabic spellings and digit formats still return correct results.
 
 ---
 
@@ -15,10 +24,11 @@ diacritics (tashkeel), tatweel (ـ), Arabic digits (٠١٢), and more.
 - ✅ Remove tatweel (ـ)
 - ✅ Normalize Alef variants: أ / إ / آ / ٱ → ا
 - ✅ Normalize Yeh: ى → ي
-- ✅ (Search mode) Normalize Teh Marbuta: ة → ه
+- ✅ *(Search mode)* Normalize Teh Marbuta: ة → ه
 - ✅ Convert Arabic digits ↔ English digits (٠١٢ ↔ 012)
-- ✅ Generate robust search keys for accurate Arabic search
-- ✅ Lightweight, fast, and dependency-free (except `meta`)
+- ✅ Generate robust **search keys** for accurate Arabic search
+- ✅ Token-based and ranked search helpers
+- ✅ Lightweight & fast (no heavy dependencies)
 - ✅ Pure Dart (works with Flutter & backend Dart)
 
 ---
@@ -27,19 +37,9 @@ diacritics (tashkeel), tatweel (ـ), Arabic digits (٠١٢), and more.
 
 Arabic text can be written in many valid forms:
 
-إسلام / اسلام  
-الإتصالات / الاتصالات  
-١٢٣ / 123  
-مُحَمَّد / محمد  
-
-This package normalizes all of these into a single consistent form  
-so search, filtering, and comparisons work correctly.
-
----
-
-## 🚀 Getting started
-
-Add the package to your project:
-
-```bash
-dart pub add arabic_search
+إسلام / اسلام
+الإتصالات / الاتصالات
+١٢٣ / 123
+مُحَمَّد / محمد
+This package **normalizes all of these into a single consistent form**,  
+so search, filtering, and comparisons work correctly — every time.
