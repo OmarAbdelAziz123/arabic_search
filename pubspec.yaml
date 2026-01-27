@@ -1,6 +1,9 @@
 name: arabic_search
-description: Arabic-first text normalization and search utilities for Dart & Flutter.
-version: 0.1.2
+description: >
+  Arabic-first text normalization and search utilities for Dart & Flutter,
+  with robust normalization, token-based search, and simple result ranking.
+
+version: 0.2.0
 homepage: https://github.com/OmarAbdelAziz123/arabic_search
 
 environment:
