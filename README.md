@@ -12,7 +12,7 @@ Built to solve real-world Arabic search problems in a clean, fast, and reusable 
 
 Real-time Arabic search demo using `arabic_search` in a Flutter app:
 
-![arabic_search Demo] /Volumes/Extreme Pro/packages/arabic_search/arabic_search/assets/demo.gif
+![arabic_search Demo](https://raw.githubusercontent.com/omarabdelaziz/arabic_search/main/assets/demo.gif)
 
 
 > The demo shows how different Arabic spellings and digit formats still return correct results.
