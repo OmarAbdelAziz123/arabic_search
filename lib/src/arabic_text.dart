@@ -41,45 +41,56 @@ abstract final class ArabicText {
 
   static const String _tatweel = '\u0640';
 
-  static const Map<String, String> _arabicToEnglishDigits = {
-    '٠': '0',
-    '١': '1',
-    '٢': '2',
-    '٣': '3',
-    '٤': '4',
-    '٥': '5',
-    '٦': '6',
-    '٧': '7',
-    '٨': '8',
-    '٩': '9',
-  };
+  // ---------------------------------------------------------------------------
+  // 🔢 Digit mapping (Arabic ↔ English) - single pass using StringBuffer
+  // ---------------------------------------------------------------------------
 
-  static const Map<String, String> _englishToArabicDigits = {
-    '0': '٠',
-    '1': '١',
-    '2': '٢',
-    '3': '٣',
-    '4': '٤',
-    '5': '٥',
-    '6': '٦',
-    '7': '٧',
-    '8': '٨',
-    '9': '٩',
-  };
-
-  /// تحويل الأرقام العربية إلى إنجليزية داخل النص.
-  static String toEnglishDigits(String input) {
-    var s = input;
-    _arabicToEnglishDigits.forEach((k, v) => s = s.replaceAll(k, v));
-    return s;
+  static String _mapChars(String input, Map<int, String> mapping) {
+    final buffer = StringBuffer();
+    for (final codePoint in input.runes) {
+      final mapped = mapping[codePoint];
+      if (mapped != null) {
+        buffer.write(mapped);
+      } else {
+        buffer.writeCharCode(codePoint);
+      }
+    }
+    return buffer.toString();
   }
 
-  /// تحويل الأرقام الإنجليزية إلى عربية داخل النص.
-  static String toArabicDigits(String input) {
-    var s = input;
-    _englishToArabicDigits.forEach((k, v) => s = s.replaceAll(k, v));
-    return s;
-  }
+  static final Map<int, String> _arabicToEnglishDigitsCode = {
+    '٠'.codeUnitAt(0): '0',
+    '١'.codeUnitAt(0): '1',
+    '٢'.codeUnitAt(0): '2',
+    '٣'.codeUnitAt(0): '3',
+    '٤'.codeUnitAt(0): '4',
+    '٥'.codeUnitAt(0): '5',
+    '٦'.codeUnitAt(0): '6',
+    '٧'.codeUnitAt(0): '7',
+    '٨'.codeUnitAt(0): '8',
+    '٩'.codeUnitAt(0): '9',
+  };
+
+  static final Map<int, String> _englishToArabicDigitsCode = {
+    '0'.codeUnitAt(0): '٠',
+    '1'.codeUnitAt(0): '١',
+    '2'.codeUnitAt(0): '٢',
+    '3'.codeUnitAt(0): '٣',
+    '4'.codeUnitAt(0): '٤',
+    '5'.codeUnitAt(0): '٥',
+    '6'.codeUnitAt(0): '٦',
+    '7'.codeUnitAt(0): '٧',
+    '8'.codeUnitAt(0): '٨',
+    '9'.codeUnitAt(0): '٩',
+  };
+
+  /// تحويل الأرقام العربية إلى إنجليزية داخل النص (single pass).
+  static String toEnglishDigits(String input) =>
+      _mapChars(input, _arabicToEnglishDigitsCode);
+
+  /// تحويل الأرقام الإنجليزية إلى عربية داخل النص (single pass).
+  static String toArabicDigits(String input) =>
+      _mapChars(input, _englishToArabicDigitsCode);
 
   /// إزالة التشكيل من النص.
   static String stripDiacritics(String input) =>
@@ -87,6 +98,49 @@ abstract final class ArabicText {
 
   /// إزالة التطويل من النص.
   static String stripTatweel(String input) => input.replaceAll(_tatweel, '');
+
+  // ---------------------------------------------------------------------------
+  // 🔤 Letter normalization (أ/إ/آ/ٱ، ى، ة) في pass واحد بدون replaceAll
+  // ---------------------------------------------------------------------------
+
+  static String _normalizeLetters(
+    String input,
+    ArabicNormalizeOptions options,
+  ) {
+    if (!options.unifyAlef && !options.unifyYeh && !options.unifyTehMarbuta) {
+      return input;
+    }
+
+    final buffer = StringBuffer();
+    for (final codePoint in input.runes) {
+      // Alef variants → Alef
+      if (options.unifyAlef &&
+          (codePoint == 0x0623 || // أ
+              codePoint == 0x0625 || // إ
+              codePoint == 0x0622 || // آ
+              codePoint == 0x0671 // ٱ
+          )) {
+        buffer.writeCharCode(0x0627); // ا
+        continue;
+      }
+
+      // Yeh final -> Yeh
+      if (options.unifyYeh && codePoint == 0x0649) {
+        buffer.writeCharCode(0x064A); // ي
+        continue;
+      }
+
+      // Teh Marbuta -> Heh (for search)
+      if (options.unifyTehMarbuta && codePoint == 0x0629) {
+        buffer.writeCharCode(0x0647); // ه
+        continue;
+      }
+
+      buffer.writeCharCode(codePoint);
+    }
+
+    return buffer.toString();
+  }
 
   /// Normalize Arabic (and mixed) text according to [options].
   static String normalize(
@@ -104,21 +158,8 @@ abstract final class ArabicText {
       s = s.replaceAll(_punctuation, ' ');
     }
 
-    if (options.unifyAlef) {
-      s = s
-          .replaceAll('\u0623', '\u0627') // أ
-          .replaceAll('\u0625', '\u0627') // إ
-          .replaceAll('\u0622', '\u0627') // آ
-          .replaceAll('\u0671', '\u0627'); // ٱ
-    }
-
-    if (options.unifyYeh) {
-      s = s.replaceAll('\u0649', '\u064A'); // ى -> ي
-    }
-
-    if (options.unifyTehMarbuta) {
-      s = s.replaceAll('\u0629', '\u0647'); // ة -> ه (للsearch)
-    }
+    // Single-pass letter normalization (أ/إ/آ/ٱ، ى، ة)
+    s = _normalizeLetters(s, options);
 
     if (options.collapseWhitespace) {
       s = s.trim().replaceAll(RegExp(r'\s+'), ' ');
@@ -189,7 +230,9 @@ abstract final class ArabicText {
   /// - Prefix match -> ~0.7 - 1.0 (depending on length)
   /// - Contains -> lower score
   static double _scoreNormalized(
-      String normalizedText, String normalizedQuery) {
+    String normalizedText,
+    String normalizedQuery,
+  ) {
     if (normalizedQuery.isEmpty) return 0.0;
     if (normalizedText.isEmpty) return 0.0;
 
@@ -244,6 +287,51 @@ abstract final class ArabicText {
     for (final item in items) {
       final rawText = textSelector(item);
       final normalizedText = normalize(rawText, options: options);
+
+      final index = normalizedText.indexOf(normalizedQuery);
+      if (index == -1) continue;
+
+      final score = _scoreNormalized(normalizedText, normalizedQuery);
+      if (score <= 0.0) continue;
+
+      hits.add(
+        ArabicSearchHit<T>(
+          item: item,
+          score: score,
+          index: index,
+          matchedLength: normalizedQuery.length,
+        ),
+      );
+    }
+
+    hits.sort((a, b) => b.score.compareTo(a.score));
+    return hits;
+  }
+
+  /// Variant for collections that already store *normalized* search keys.
+  ///
+  /// Useful when you precompute and cache search keys for performance.
+  ///
+  /// Example:
+  ///   final results = ArabicText.searchInListNormalized<User>(
+  ///     users,
+  ///     normalizedQuery: ArabicText.searchKey('محمد احمد'),
+  ///     normalizedTextSelector: (u) => u.nameSearchKey,
+  ///   );
+  static List<ArabicSearchHit<T>> searchInListNormalized<T>(
+    Iterable<T> items, {
+    required String normalizedQuery,
+    required String Function(T item) normalizedTextSelector,
+  }) {
+    if (normalizedQuery.isEmpty) {
+      return const [];
+    }
+
+    final List<ArabicSearchHit<T>> hits = [];
+
+    for (final item in items) {
+      final normalizedText = normalizedTextSelector(item);
+      if (normalizedText.isEmpty) continue;
 
       final index = normalizedText.indexOf(normalizedQuery);
       if (index == -1) continue;
